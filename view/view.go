@@ -2,17 +2,17 @@
 package view
 
 import (
-	"bufio"
 	"fmt"
+	"image/color"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
-	"image/color"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"log"
+	"bufio"
+	"fyne.io/fyne/v2/dialog"
 	"strconv"
 	models "myapp/models"
 )
@@ -33,12 +33,16 @@ func (v *View) Run() {
 
 	// v.grafo.IngresarVertices("A")
 	// v.grafo.IngresarVertices("B")
+	// v.grafo.IngresarVertices("C")
 
-	// v.grafo.GetVertice("B").SetEstadoFinal(true)
+	// v.grafo.GetVertice("C").SetEstadoFinal(true)
 
-	// v.grafo.IngresarArista("A", "A", "1")
 	// v.grafo.IngresarArista("A", "B", "0")
-	// v.grafo.IngresarArista("B", "B", "0")
+	// v.grafo.IngresarArista("A", "A", "1")
+	// v.grafo.IngresarArista("B", "C", "1")
+	// v.grafo.IngresarArista("C", "C", "0")
+
+	// v.grafo.ConvertirAutomataACompleto()
 
 	myWindow := v.app.NewWindow("Autómatas")
 	myWindow.Resize(fyne.NewSize(600, 300))
@@ -77,7 +81,6 @@ func (v *View) Run() {
 							// Agregar el estado al grafo
 							v.grafo.IngresarVertices(valor)
 						}
-						// v.grafo.mostrarVertices()
 
 						v.ingresarEstadosFinales()
 
@@ -114,10 +117,9 @@ func (v *View) Run() {
 
 				for scanner.Scan() {
 					texto := scanner.Text()
-					fmt.Println(texto)
+					fmt.Println("Cadena a leer: ", texto)
 
-					// Primero lo convertimos a completo
-					v.grafo.ConvertirAutomataCompleto()
+					v.grafo.ConvertirAutomataACompleto()
 
 					// Luego lo recorremos
 					v.grafo.RecorrerAutomata(texto, myWindow)
@@ -185,9 +187,15 @@ func (v *View) pedirTransiciones() {
 }
 
 func (v *View) MostrarAutomataInterfaz() {
+
+	fmt.Println("Mostrar automata")
+	fmt.Println("Cantidad de estados: ", len(v.grafo.GetListaVertices()))
+	v.grafo.MostrarVertices()
+	v.grafo.ConvertirAutomataACompleto()
+
 	if len(v.grafo.GetListaVertices()) <= 4 {
 
-		w := v.app.NewWindow("PRUEBA")
+		w := v.app.NewWindow("Ver autómata")
 		w.Resize(fyne.NewSize(800, 500))
 		contenedor := container.NewWithoutLayout()
 
@@ -201,18 +209,29 @@ func (v *View) MostrarAutomataInterfaz() {
 
 		for i := 1; i < len(v.grafo.GetListaVertices()); i++ {
 
-			estadoActual := v.grafo.GetListaVertices()[i]
-			estadoActual.SetPosicionX(inicial.GetPosicionX() + 200)
-			estadoActual.SetPosicionY(inicial.GetPosicionY())
-			circulo := canvas.NewCircle(color.RGBA{R: 0, G: 255, B: 0, A: 255})
+			if v.grafo.GetListaVertices()[i].GetDato() == "Sumidero" {
+				circulo := canvas.NewCircle(color.RGBA{R: 255, G: 0, B: 0, A: 255})
+				circulo.Move(fyne.NewPos(200, 200))
+				v.grafo.GetListaVertices()[i].SetPosicionX(200)
+				v.grafo.GetListaVertices()[i].SetPosicionY(200)
+				circulo.Resize(fyne.NewSize(50, 50)) // 50x50 pixels
+				contenedor.Add(circulo)
+			} else {
+				estadoAnterior := v.grafo.GetListaVertices()[i-1]
 
-			if estadoActual.GetEstadoFinal() {
-				circulo = canvas.NewCircle(color.RGBA{R: 0, G: 0, B: 255, A: 255})
+				estadoActual := v.grafo.GetListaVertices()[i]
+				estadoActual.SetPosicionX(estadoAnterior.GetPosicionX() + 200)
+				estadoActual.SetPosicionY(estadoAnterior.GetPosicionY())
+				circulo := canvas.NewCircle(color.RGBA{R: 0, G: 255, B: 0, A: 255})
+	
+				if estadoActual.GetEstadoFinal() {
+					circulo = canvas.NewCircle(color.RGBA{R: 0, G: 0, B: 255, A: 255})
+				}
+	
+				circulo.Resize(fyne.NewSize(50, 50)) // 50x50 pixels
+				circulo.Move(fyne.NewPos(float32(estadoActual.GetPosicionX()), float32(estadoActual.GetPosicionY())))
+				contenedor.Add(circulo)
 			}
-
-			circulo.Resize(fyne.NewSize(50, 50)) // 50x50 pixels
-			circulo.Move(fyne.NewPos(float32(estadoActual.GetPosicionX()), float32(estadoActual.GetPosicionY())))
-			contenedor.Add(circulo)
 		}
 
 		for i := 0; i < len(v.grafo.GetListaAristas()); i++ {
@@ -221,24 +240,37 @@ func (v *View) MostrarAutomataInterfaz() {
 			destino := v.grafo.GetListaAristas()[i].GetDestino()
 			peso := v.grafo.GetListaAristas()[i].GetPeso()
 
-			// fmt.Println(origen.GetPosicionX())
-			// fmt.Println(destino.GetPosicionX())
-
 			if origen == destino {
 
-				Text := canvas.NewText(peso, color.RGBA{R: 255, G: 255, B: 0, A: 255})
-				Text.TextStyle = fyne.TextStyle{Bold: true}
-				Text.TextSize = 20
-				Text.Move(fyne.NewPos(float32(origen.GetPosicionX()+25), float32(origen.GetPosicionY()-30)))
-				Line := canvas.NewLine(color.RGBA{R: 0, G: 0, B: 0, A: 255})
-				Line.StrokeColor = color.NRGBA{R: 255, G: 255, B: 0, A: 255}
-				Line.StrokeWidth = 6
-
-				Line.Position1 = fyne.NewPos(float32(origen.GetPosicionX()+20), float32(origen.GetPosicionY()-5))
-				Line.Position2 = fyne.NewPos(float32(destino.GetPosicionX()+40), float32(destino.GetPosicionY()-5))
-
-				contenedor.Add(Text)
-				contenedor.Add(Line)
+				if peso == "0" {
+					Text := canvas.NewText(peso, color.RGBA{R: 255, G: 255, B: 0, A: 255})
+					Text.TextStyle = fyne.TextStyle{Bold: true}
+					Text.TextSize = 20
+					Text.Move(fyne.NewPos(float32(origen.GetPosicionX()+20), float32(origen.GetPosicionY()-30)))
+					Line := canvas.NewLine(color.RGBA{R: 0, G: 0, B: 0, A: 255})
+					Line.StrokeColor = color.NRGBA{R: 255, G: 255, B: 0, A: 255}
+					Line.StrokeWidth = 6
+	
+					Line.Position1 = fyne.NewPos(float32(origen.GetPosicionX()+20), float32(origen.GetPosicionY()-5))
+					Line.Position2 = fyne.NewPos(float32(destino.GetPosicionX()+40), float32(destino.GetPosicionY()-5))
+	
+					contenedor.Add(Text)
+					contenedor.Add(Line)
+				} else {
+					Text := canvas.NewText(peso, color.RGBA{R: 255, G: 255, B: 0, A: 255})
+					Text.TextStyle = fyne.TextStyle{Bold: true}
+					Text.TextSize = 20
+					Text.Move(fyne.NewPos(float32(origen.GetPosicionX()+20), float32(origen.GetPosicionY()+65)))
+					Line := canvas.NewLine(color.RGBA{R: 0, G: 0, B: 0, A: 255})
+					Line.StrokeColor = color.NRGBA{R: 255, G: 255, B: 0, A: 255}
+					Line.StrokeWidth = 6
+	
+					Line.Position1 = fyne.NewPos(float32(origen.GetPosicionX()+20), float32(origen.GetPosicionY()+60))
+					Line.Position2 = fyne.NewPos(float32(destino.GetPosicionX()+40), float32(destino.GetPosicionY()+60))
+	
+					contenedor.Add(Text)
+					contenedor.Add(Line)
+				}
 
 			} else {
 
@@ -265,7 +297,7 @@ func (v *View) MostrarAutomataInterfaz() {
 		w.SetContent(
 			contenedor,
 		)
-		
+
 		w.Show()
 
 	} else {
