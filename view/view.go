@@ -33,14 +33,15 @@ func (v *View) Run() {
 
 	// v.grafo.IngresarVertices("A")
 	// v.grafo.IngresarVertices("B")
-	// v.grafo.IngresarVertices("C")
 
-	// v.grafo.GetVertice("C").SetEstadoFinal(true)
+	// v.grafo.GetVertice("B").SetEstadoFinal(true)
 
-	// v.grafo.IngresarArista("A", "B", "0")
 	// v.grafo.IngresarArista("A", "A", "1")
-	// v.grafo.IngresarArista("B", "C", "1")
-	// v.grafo.IngresarArista("C", "C", "0")
+	// v.grafo.IngresarArista("A", "B", "0")
+	// v.grafo.IngresarArista("B", "B", "0")
+	// v.grafo.IngresarArista("B", "A", "1")
+
+	// v.grafo.MostrarVertices()
 
 	// v.grafo.ConvertirAutomataACompleto()
 
@@ -144,6 +145,12 @@ func (v *View) Run() {
 }
 
 func (v *View) pedirTransiciones() {
+
+	if len(v.grafo.GetListaVertices()) == 0 {
+		fmt.Println("No hay estados para crear transiciones, crea el automata")
+		return
+	}
+
 	ventanaTransiciones := v.app.NewWindow("Transiciones")
 	ventanaTransiciones.Resize(fyne.NewSize(400, 500))
 
@@ -188,9 +195,11 @@ func (v *View) pedirTransiciones() {
 
 func (v *View) MostrarAutomataInterfaz() {
 
-	fmt.Println("Mostrar automata")
-	fmt.Println("Cantidad de estados: ", len(v.grafo.GetListaVertices()))
-	v.grafo.MostrarVertices()
+	if len(v.grafo.GetListaVertices()) == 0 {
+		fmt.Println("No hay estados para mostrar, crea el automata")
+		return
+	}
+
 	v.grafo.ConvertirAutomataACompleto()
 
 	if len(v.grafo.GetListaVertices()) <= 4 {

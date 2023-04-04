@@ -153,11 +153,18 @@ func (g *Grafo) GetNombreVertices() []string {
 
 // ingresar arista
 func (g *Grafo) IngresarArista(Origen string, Destino string, Peso string) {
-	// if !g.VerificarExisteArista(&Arista{g.GetVertice(Origen), g.GetVertice(Destino), Peso}) {
+
+	for i := 0; i < len(g.listaAristas); i++ {
+		// verificar si ya existe una arista con ese peso
+		if g.listaAristas[i].Origen.dato == Origen && g.listaAristas[i].Peso == Peso {
+			fmt.Println("Ya existe una arista con ese peso")
+			return
+		}
+	}
+
 	g.listaAristas = append(g.listaAristas, &Arista{g.GetVertice(Origen), g.GetVertice(Destino), Peso})
 
 	g.GetVertice(g.GetVertice(Origen).GetDato()).ListaAdyacentes = append(g.GetVertice(g.GetVertice(Origen).GetDato()).ListaAdyacentes, g.GetVertice(Destino))
-	// }
 }
 
 // obtener vertice
@@ -184,7 +191,7 @@ func (g *Grafo) RecorrerAutomata(cadena string, ventana fyne.Window) {
 
 	//recorrer el arreglo de caracteres
 
-	estadoActual := g.GetVertice("A")
+	estadoActual := g.listaVertices[0]
 
 	g.CambiarEstado(estadoActual, 0, cadenaArr, ventana)
 
@@ -205,6 +212,7 @@ func (g *Grafo) CambiarEstado(estadoActual *Vertice, posicionCadena int, cadenaA
 
 	//miro por donde me puedo ir siguiendo la cadena
 	for i := 0; i < len(g.listaAristas); i++ {
+		//* solo aristas de este vertice
 		if g.listaAristas[i].GetOrigen().GetDato() == estadoActual.GetDato() {
 			// print(g.listaAristas[i].GetOrigen().dato, " -> ", g.listaAristas[i].GetDestino().dato, " = ", g.listaAristas[i].GetPeso(), "\n")
 			if g.listaAristas[i].GetPeso() == cadenaArrInt[posicionCadena] {
