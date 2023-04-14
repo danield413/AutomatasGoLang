@@ -7,6 +7,6 @@ import (
 func main() {
 	
 	view := view.NewView()
-	view.Run()
+	view.CargarVentanaPrincipal()
 
 }

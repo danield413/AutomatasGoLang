@@ -29,7 +29,10 @@ func NewView() *View {
 	}
 }
 
-func (v *View) Run() {
+//* VENTANA PRINCIPAL DE LA APLICACIÓN *//
+func (v *View) CargarVentanaPrincipal() {
+
+	// v.app.Settings().SetTheme(theme.LightTheme())
 
 	// v.grafo.IngresarVertices("A")
 	// v.grafo.IngresarVertices("B")
@@ -48,7 +51,7 @@ func (v *View) Run() {
 	myWindow := v.app.NewWindow("Autómatas")
 	myWindow.Resize(fyne.NewSize(600, 300))
 
-	//create a button
+	//* BOTÓN PARA CREAR EL AUTOMATA MANUALMENTE *//
 	button := widget.NewButton("Crear autómata manualmente", func() {
 		ventanaCargar := v.app.NewWindow("Cargar")
 		ventanaCargar.Resize(fyne.NewSize(400, 180))
@@ -83,9 +86,9 @@ func (v *View) Run() {
 							v.grafo.IngresarVertices(valor)
 						}
 
-						v.ingresarEstadosFinales()
+						v.CargarVentanaEstadosFinales()
 
-						v.pedirTransiciones()
+						v.CargarVentanaTransiciones()
 
 						ventanaAgregar.Close()
 						ventanaCargar.Close()
@@ -109,6 +112,7 @@ func (v *View) Run() {
 		ventanaCargar.SetContent(container.NewVBox(input))
 	})
 
+	//* BOTÓN PARA CARGAR UN ARCHIVO CON LA CADENA A LEER *//
 	selectFileButton := widget.NewButton("Cargar cadena", func() {
 		dialog.ShowFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err == nil && reader != nil {
@@ -120,9 +124,10 @@ func (v *View) Run() {
 					texto := scanner.Text()
 					fmt.Println("Cadena a leer: ", texto)
 
+					//* Convertir el automata a completo *//
 					v.grafo.ConvertirAutomataACompleto()
 
-					// Luego lo recorremos
+					//* Luego lo recorremos
 					v.grafo.RecorrerAutomata(texto, myWindow)
 
 				}
@@ -134,17 +139,19 @@ func (v *View) Run() {
 		}, myWindow)
 	})
 
+	//* BOTÓN PARA VER EL AUTOMATA *//
 	buttonVer := widget.NewButton("Ver autómata", func() {
-		v.MostrarAutomataInterfaz()
+		v.CargarVentanaMostrarAutomata()
 	})
 
-	// Agregamos el botón a un contenedor y lo mostramos
+	//* Agregamos el botón a un contenedor y lo mostramos
 	content := container.New(layout.NewVBoxLayout(), button, selectFileButton, buttonVer)
 	myWindow.SetContent(content)
 	myWindow.ShowAndRun()
 }
 
-func (v *View) pedirTransiciones() {
+//* VENTANA PARA INGRESAR LAS TRANSICIONES DEL AUTOMATA *//
+func (v *View) CargarVentanaTransiciones() {
 
 	if len(v.grafo.GetListaVertices()) == 0 {
 		fmt.Println("No hay estados para crear transiciones, crea el automata")
@@ -165,7 +172,7 @@ func (v *View) pedirTransiciones() {
 
 	container := container.New(layout.NewVBoxLayout())
 	container.Add(widget.NewButton("Crear transición", func() {
-		// Obtener los valores de los widgets
+		//* Obtener los valores de los inputs
 		inicio := radioGroup1.Selected
 		fin := radioGroup2.Selected
 		valor := radioGroup3.Selected
@@ -174,8 +181,10 @@ func (v *View) pedirTransiciones() {
 		fmt.Println(fin)
 		fmt.Println(valor)
 
+		//* Agregamos la transición al grafo
 		v.grafo.IngresarArista(inicio, fin, valor)
 		v.grafo.MostrarVertices()
+		dialog.ShowInformation("Mensaje", "Nueva transición creada!", ventanaTransiciones)
 	}))
 	container.Add(widget.NewButton("Regresar", func() {
 		ventanaTransiciones.Close()
@@ -193,20 +202,25 @@ func (v *View) pedirTransiciones() {
 
 }
 
-func (v *View) MostrarAutomataInterfaz() {
+//* VENTANA PARA MOSTAR EL AUTOMATA EN LA INTERFAZ GRAFICA *//
+func (v *View) CargarVentanaMostrarAutomata() {
+
+	ventanaMostrarAutomata := v.app.NewWindow("Ver autómata")
+	ventanaMostrarAutomata.Resize(fyne.NewSize(800, 500))
+	contenedor := container.NewWithoutLayout()
 
 	if len(v.grafo.GetListaVertices()) == 0 {
+		dialog.ShowInformation("Mensaje", "No hay estados para mostrar, crea el automata", ventanaMostrarAutomata)
+		ventanaMostrarAutomata.Show()
 		fmt.Println("No hay estados para mostrar, crea el automata")
 		return
 	}
 
+	//* Convertir el automata a completo *//
 	v.grafo.ConvertirAutomataACompleto()
 
+	//* Si el automata tiene 4 o menos estados, lo mostramos en la interfaz grafica *//
 	if len(v.grafo.GetListaVertices()) <= 4 {
-
-		w := v.app.NewWindow("Ver autómata")
-		w.Resize(fyne.NewSize(800, 500))
-		contenedor := container.NewWithoutLayout()
 
 		inicial := v.grafo.GetListaVertices()[0]
 		inicial.SetPosicionX(100)
@@ -216,6 +230,7 @@ func (v *View) MostrarAutomataInterfaz() {
 		estadoInicial.Resize(fyne.NewSize(50, 50)) // 50x50 pixels
 		contenedor.Add(estadoInicial)
 
+		//* Creamos los estados del automata (circulos)
 		for i := 1; i < len(v.grafo.GetListaVertices()); i++ {
 
 			if v.grafo.GetListaVertices()[i].GetDato() == "Sumidero" {
@@ -243,6 +258,7 @@ func (v *View) MostrarAutomataInterfaz() {
 			}
 		}
 
+		//* Creamos las transiciones del automata (lineas)
 		for i := 0; i < len(v.grafo.GetListaAristas()); i++ {
 
 			origen := v.grafo.GetListaAristas()[i].GetOrigen()
@@ -303,21 +319,22 @@ func (v *View) MostrarAutomataInterfaz() {
 		}
 		println("------------------------------------")
 
-		w.SetContent(
+		ventanaMostrarAutomata.SetContent(
 			contenedor,
 		)
 
-		w.Show()
+		ventanaMostrarAutomata.Show()
 
 	} else {
-		fmt.Println("No se puede mostrar ese autómata")
+		dialog.ShowInformation("Warning", "No se puede mostrar ese autómata, tiene más de 4 estados", ventanaMostrarAutomata)
+		fmt.Println("No se puede mostrar ese autómata, tiene más de 4 estados")
 	}
 }
 
-// ingresarEstadosFinales
-func (v *View) ingresarEstadosFinales() {
+//* VENTANA PARA INGRESAR LOS ESTADOS FINALES DEL AUTOMATA *//
+func (v *View) CargarVentanaEstadosFinales() {
 
-	ventanaEstadosFinales := v.app.NewWindow("Estafos finales")
+	ventanaEstadosFinales := v.app.NewWindow("Estados finales")
 	ventanaEstadosFinales.Resize(fyne.NewSize(400, 500))
 
 	estados := v.grafo.GetNombreVertices()
@@ -333,7 +350,7 @@ func (v *View) ingresarEstadosFinales() {
 		fmt.Println(estadoFinal)
 
 		v.grafo.GetVertice(estadoFinal).SetEstadoFinal(true)
-		fmt.Println(v.grafo.GetVertice(estadoFinal).GetEstadoFinal())
+		dialog.ShowInformation("Mensaje", "Nuevo estado final creado!", ventanaEstadosFinales)
 	}))
 	container.Add(widget.NewButton("Regresar", func() {
 		ventanaEstadosFinales.Close()
