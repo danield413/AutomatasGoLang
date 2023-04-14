@@ -151,7 +151,7 @@ func (g *Grafo) GetNombreVertices() []string {
 	return vertices
 }
 
-// ingresar arista
+// ingresar arista 
 func (g *Grafo) IngresarArista(Origen string, Destino string, Peso string) {
 
 	for i := 0; i < len(g.listaAristas); i++ {
@@ -166,6 +166,23 @@ func (g *Grafo) IngresarArista(Origen string, Destino string, Peso string) {
 
 	g.GetVertice(g.GetVertice(Origen).GetDato()).ListaAdyacentes = append(g.GetVertice(g.GetVertice(Origen).GetDato()).ListaAdyacentes, g.GetVertice(Destino))
 }
+
+//* Ingresar arista pasandole la ventana para mostrar dialogos
+func (g *Grafo) IngresarAristaConVentana(Origen string, Destino string, Peso string, ventana fyne.Window) {
+	for i := 0; i < len(g.listaAristas); i++ {
+		// verificar si ya existe una arista con ese peso
+		if g.listaAristas[i].Origen.dato == Origen && g.listaAristas[i].Peso == Peso {
+			dialog.ShowInformation("Error", "Ya existe una transición con ese peso, solo se aceptan AFD", ventana)
+			return
+		}
+	}
+
+	g.listaAristas = append(g.listaAristas, &Arista{g.GetVertice(Origen), g.GetVertice(Destino), Peso})
+
+	g.GetVertice(g.GetVertice(Origen).GetDato()).ListaAdyacentes = append(g.GetVertice(g.GetVertice(Origen).GetDato()).ListaAdyacentes, g.GetVertice(Destino))
+	dialog.ShowInformation("Éxito", "Transición ingresada correctamente", ventana)
+}
+
 
 // obtener vertice
 func (g *Grafo) GetVertice(dato string) *Vertice {
