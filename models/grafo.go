@@ -177,26 +177,30 @@ func (g *Grafo) GetVertice(dato string) *Vertice {
 	return nil
 }
 
-// recorrer el grafo usando los valores de la cadena de caracteres
+//* MÉTODO QUE ME RECORRE EL AUTÓMATA (GRAFO) VIENDO SI LA CADENA CUMPLE O NO *//
 func (g *Grafo) RecorrerAutomata(cadena string, ventana fyne.Window) {
 	fmt.Println("Recorriendo el autómata con la cadena: " + cadena)
-	// valida := false
-	//convertir la cadena a un arreglo de caracteres
-
+	
+	//* PASAMOS LA CADENA A UN ARREGLO DE CARACTERES *//
 	cadenaArr := []string{}
 
 	for i := 0; i < len(cadena); i++ {
 		cadenaArr = append(cadenaArr, string(cadena[i]))
 	}
 
-	//recorrer el arreglo de caracteres
-
+	//* OBTENEMOS EL ESTADO INICIAL (EL PRIMER VERTICE)*//
 	estadoActual := g.listaVertices[0]
 
+	//* LLAMAMOS AL MÉTODO RECURSIVO ENCARGADO DE VERIFICAR SI LA CADENA CUMPLE O NO *//
+	//* PASAMOS EL ESTADO ACTUAL, LA POSICIÓN ACTUAL DE LA CADENA, EL ARREGLO DE CARACTERES *//
+	//* Y LA VENTANA PARA MOSTRAR EL RESULTADO *//
 	g.CambiarEstado(estadoActual, 0, cadenaArr, ventana)
 
 }
 
+//* MÉTODO QUE ME RECORRE EL AUTÓMATA (GRAFO) VIENDO SI LA CADENA CUMPLE O NO *//
+//* ES UN MÉTODO RECURSIVO QUE PASA POR CADA ESTADO EN LO POSIBLE TENIENDO EN CUENTA EL *//
+//* PESO DE LA ARISTA QUE SE VA A SEGUIR Y LA POSICIÓN ACTUAL DE LA CADENA *//
 func (g *Grafo) CambiarEstado(estadoActual *Vertice, posicionCadena int, cadenaArrInt []string, ventana fyne.Window) {
 
 	//si el estado actual es un estado de aceptacion
@@ -210,13 +214,15 @@ func (g *Grafo) CambiarEstado(estadoActual *Vertice, posicionCadena int, cadenaA
 		return
 	}
 
-	//miro por donde me puedo ir siguiendo la cadena
+	//* MIRAMOS LAS ARISTAS DEL VERTICE ACTUAL Y DEPENDIENDO DE LA POSICIÓN ACTUAL DE LA CADENA *//
+	//* Y EL PESO DE LA ARISTA QUE SE VA A SEGUIR, SEGUIMOS RECORRIENDO EL AUTÓMATA *//
 	for i := 0; i < len(g.listaAristas); i++ {
 		//* solo aristas de este vertice
 		if g.listaAristas[i].GetOrigen().GetDato() == estadoActual.GetDato() {
 			// print(g.listaAristas[i].GetOrigen().dato, " -> ", g.listaAristas[i].GetDestino().dato, " = ", g.listaAristas[i].GetPeso(), "\n")
 			if g.listaAristas[i].GetPeso() == cadenaArrInt[posicionCadena] {
 				print("Pasó por ", g.listaAristas[i].GetDestino().GetDato(), "\n")
+				//* llamamos recursivamente al método con el nuevo estado actual, la nueva posición de la cadena *//
 				g.CambiarEstado(g.listaAristas[i].GetDestino(), posicionCadena+1, cadenaArrInt, ventana)
 			}
 		}
